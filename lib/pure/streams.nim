@@ -303,8 +303,8 @@ when (NimMajor, NimMinor) >= (1, 3) or not defined(js):
         if readBytes == 0:
           break
         let prevLen = result.len
-        result.setLen(prevLen + readBytes)
-        copyMem(addr(result[prevLen]), addr(buffer[0]), readBytes)
+        copyMem(beginStore(result, prevLen + readBytes, prevLen), addr(buffer[0]), readBytes)
+        endStore(result)
         if readBytes < bufferSize:
           break
 

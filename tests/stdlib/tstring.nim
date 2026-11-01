@@ -275,3 +275,24 @@ when not defined(js):
     var s = "abc"
     let sp = addr s
     doAssert sp[][^1] == 'c'
+
+when not defined(js):
+  import std/streams
+
+  block: # bug #26613; `streams.readAll` left the SSO hot-prefix cache stale
+    # Heap strings (15+ chars) read through a raw `copyMem` compared unequal
+    # to their own contents; `beginStore`/`endStore` keeps the mirror synced.
+    for n in [14, 15, 33]:
+      var want = newString(n)
+      for i in 0 ..< n:
+        want[i] = char(ord('a') + i mod 26)
+      var strm = newStringStream(want)
+      doAssert strm.readAll() == want
+      strm.close()
+
+    var big = newString(2500) # multi-chunk: readAll's buffer is 1024
+    for i in 0 ..< big.len:
+      big[i] = char(ord('a') + i mod 26)
+    var strm = newStringStream(big)
+    doAssert strm.readAll() == big
+    strm.close()
